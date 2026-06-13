@@ -12,10 +12,10 @@ body,
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: #0f172a;
+  background: #e2e8f0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  color: #f1f5f9;
+  color: #1e293b;
 }
 
 .app {
@@ -35,7 +35,7 @@ body,
 }
 
 .leaflet-container {
-  background: #0f172a;
+  background: #e2e8f0;
 }
 
 /* ── Controls panel ──────────────────────────── */
@@ -46,10 +46,10 @@ body,
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(15, 23, 42, 0.93);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding: 10px 16px;
   padding-bottom: max(10px, env(safe-area-inset-bottom));
   user-select: none;
@@ -65,10 +65,10 @@ body,
 .region-tab {
   flex: 1;
   padding: 6px 0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 6px;
-  background: transparent;
-  color: #94a3b8;
+  background: #f1f5f9;
+  color: #64748b;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -78,7 +78,7 @@ body,
 
 .region-tab.active {
   background: #1d4ed8;
-  border-color: #3b82f6;
+  border-color: #1d4ed8;
   color: #fff;
 }
 
@@ -93,7 +93,7 @@ body,
 .btn-icon {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -105,7 +105,7 @@ body,
 }
 
 .btn-icon:hover {
-  color: #f1f5f9;
+  color: #1e293b;
 }
 
 .btn-play {
@@ -128,14 +128,14 @@ body,
 
 .timeline-slider {
   flex: 1;
-  accent-color: #3b82f6;
+  accent-color: #1d4ed8;
   cursor: pointer;
   height: 4px;
 }
 
 .frame-time {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   min-width: 48px;
   text-align: right;
   flex-shrink: 0;
@@ -157,14 +157,14 @@ body,
 
 .opacity-label {
   font-size: 11px;
-  color: #64748b;
+  color: #94a3b8;
   flex-shrink: 0;
   width: 42px;
 }
 
 .opacity-slider {
   flex: 1;
-  accent-color: #3b82f6;
+  accent-color: #1d4ed8;
   cursor: pointer;
   height: 4px;
 }
@@ -177,19 +177,19 @@ body,
   left: 50%;
   transform: translateX(-50%);
   z-index: 900;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   padding: 4px 14px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #475569;
   pointer-events: none;
   white-space: nowrap;
 }
 
 .status-bar.error {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.3);
 }
 
 /* ── Legend ──────────────────────────────────── */
@@ -199,18 +199,18 @@ body,
   top: 10px;
   right: 10px;
   z-index: 900;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 10px;
-  color: #94a3b8;
+  color: #475569;
   pointer-events: none;
 }
 
 .legend-title {
   font-size: 10px;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -243,12 +243,12 @@ body,
   display: flex;
   justify-content: space-between;
   font-size: 9px;
-  color: #475569;
+  color: #94a3b8;
   padding: 0 2px;
 }
 
 .now-label {
-  color: #60a5fa;
+  color: #1d4ed8;
   font-weight: 600;
 }
 
@@ -261,10 +261,10 @@ body,
   z-index: 900;
   width: 44px;
   height: 44px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 50%;
-  color: #60a5fa;
+  color: #1d4ed8;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -275,13 +275,13 @@ body,
 }
 
 .location-btn:hover {
-  color: #93c5fd;
-  border-color: rgba(96, 165, 250, 0.4);
+  color: #2563eb;
+  border-color: rgba(29, 78, 216, 0.4);
 }
 
 .location-btn.error {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.4);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.4);
 }
 
 /* ── Isobar labels ───────────────────────────── */
@@ -297,9 +297,9 @@ body,
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   text-shadow:
-    0 0 3px rgba(0, 0, 0, 0.95),
-    0 0 5px rgba(0, 0, 0, 0.8),
-    0 0 8px rgba(0, 0, 0, 0.6);
+    0 0 3px rgba(255, 255, 255, 0.95),
+    0 0 5px rgba(255, 255, 255, 0.8),
+    0 0 8px rgba(255, 255, 255, 0.6);
   white-space: nowrap;
   pointer-events: none;
   display: block;

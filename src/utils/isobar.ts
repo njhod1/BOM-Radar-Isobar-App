@@ -16,13 +16,14 @@ export interface IsobarLine {
 
 // Covers SE Australia + surrounds — wide enough to capture synoptic pressure systems
 // One large grid shared by all views — edges stay off-screen at any normal zoom
+// lon capped at 178 to stay within Open-Meteo's −180..180 accepted range
 export const AUSTRALASIA_GRID: GridConfig = {
-  latMin: -65,
-  latMax: -5,
-  lonMin: 80,
-  lonMax: 195,
+  latMin: -60,
+  latMax: -8,
+  lonMin: 88,
+  lonMax: 178,
   nRows: 15,
-  nCols: 20,
+  nCols: 15,
 };
 
 // Flat array of [lat, lon] pairs in row-major order (row 0 = north edge)
