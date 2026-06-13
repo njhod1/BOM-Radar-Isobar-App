@@ -7,7 +7,7 @@ import {
   type IsobarLine,
 } from '../utils/isobar';
 
-export type Region = 'sydney' | 'australia' | 'indopac';
+export type Region = 'sydney' | 'australia' | 'indopac' | 'global';
 
 interface OMPoint {
   current: { pressure_msl: number | null };

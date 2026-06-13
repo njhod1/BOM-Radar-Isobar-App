@@ -86,6 +86,12 @@ export function Controls({
         >
           Indo-Pac
         </button>
+        <button
+          className={`region-tab${region === 'global' ? ' active' : ''}`}
+          onClick={() => onRegionChange('global')}
+        >
+          Global
+        </button>
       </div>
 
       {/* Timeline */}
