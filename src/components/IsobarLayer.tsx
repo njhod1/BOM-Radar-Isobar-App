@@ -94,11 +94,18 @@ export function IsobarLayer({ opacity }: Props) {
   const map = useMap();
   const [globalIsobars, setGlobalIsobars] = useState<IsobarLine[]>([]);
   const [localIsobars,  setLocalIsobars]  = useState<IsobarLine[] | null>(null);
-  const [view, setView] = useState(() => ({
-    bounds: map.getBounds(),
-    center: map.getCenter(),
-    zoom:   map.getZoom(),
-  }));
+  const [view, setView] = useState(() => {
+    // getBounds() throws "Map container has no size" if container hasn't laid out yet
+    try {
+      return { bounds: map.getBounds(), center: map.getCenter(), zoom: map.getZoom() };
+    } catch {
+      return {
+        bounds: L.latLngBounds(L.latLng(-60, 88), L.latLng(35, 178)),
+        center: L.latLng(-27, 133),
+        zoom: 4,
+      };
+    }
+  });
   const fetchingLocal = useRef(false);
 
   // Track map movement

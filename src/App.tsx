@@ -1,9 +1,25 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Component } from 'react';
+import type { ReactNode } from 'react';
 import { RadarMap } from './components/RadarMap';
 import { Controls } from './components/Controls';
 import { Legend } from './components/Legend';
 import { useRadarFrames } from './hooks/useRadarFrames';
 import type { Region } from './hooks/useIsobars';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
+  state = { error: null };
+  static getDerivedStateFromError(e: Error) { return { error: e.message }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 24, color: '#dc2626', fontFamily: 'sans-serif' }}>
+          <strong>App error:</strong> {this.state.error}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [region, setRegion] = useState<Region>('australia');
@@ -38,6 +54,7 @@ export default function App() {
   }, []);
 
   return (
+    <ErrorBoundary>
     <div className="app">
       <RadarMap
         region={region}
@@ -66,5 +83,6 @@ export default function App() {
         onRegionChange={handleRegionChange}
       />
     </div>
+    </ErrorBoundary>
   );
 }
