@@ -24,6 +24,8 @@ export function AnimatedRadar({ frames, currentIndex, opacity }: Props) {
           opacity: 0,
           zIndex: 200,
           attribution: 'Radar: <a href="https://www.rainviewer.com">RainViewer</a>',
+          maxNativeZoom: 8,
+          maxZoom: 19,
         });
         layer.addTo(map);
         layers.current.set(frame.path, layer);
