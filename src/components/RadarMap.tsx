@@ -4,11 +4,11 @@ import { IsobarLayer } from './IsobarLayer';
 import { MapController } from './MapController';
 import { LocationButton } from './LocationButton';
 import type { RadarFrame } from '../hooks/useRadarFrames';
-import type { Region } from '../hooks/useIsobars';
+import type { FlyTarget } from '../types';
 import type { IsobarLine } from '../utils/isobar';
 
 interface Props {
-  region: Region;
+  flyTarget: FlyTarget | null;
   frames: RadarFrame[];
   currentFrame: number;
   radarOpacity: number;
@@ -16,7 +16,7 @@ interface Props {
   isobars: IsobarLine[];
 }
 
-export function RadarMap({ region, frames, currentFrame, radarOpacity, isobarOpacity, isobars }: Props) {
+export function RadarMap({ flyTarget, frames, currentFrame, radarOpacity, isobarOpacity, isobars }: Props) {
   return (
     <MapContainer
       center={[-27.0, 133.0]}
@@ -31,7 +31,7 @@ export function RadarMap({ region, frames, currentFrame, radarOpacity, isobarOpa
         subdomains="abcd"
         maxZoom={19}
       />
-      <MapController region={region} />
+      <MapController flyTarget={flyTarget} />
       <AnimatedRadar frames={frames} currentIndex={currentFrame} opacity={radarOpacity} />
       <IsobarLayer globalIsobars={isobars} opacity={isobarOpacity} />
       <LocationButton />

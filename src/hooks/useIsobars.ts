@@ -7,8 +7,6 @@ import {
   type IsobarLine,
 } from '../utils/isobar';
 
-export type Region = 'sydney' | 'australia' | 'indopac' | 'global';
-
 interface OMPoint {
   current: { pressure_msl: number | null };
 }
@@ -50,7 +48,7 @@ async function fetchPressure(cfg: GridConfig): Promise<number[]> {
 const GLOBAL_TTL = 30 * 60 * 1000;
 const sharedCache = { data: null as IsobarLine[] | null, at: 0 };
 
-export function useIsobars(_region: Region) {
+export function useIsobars() {
   const [isobars, setIsobars]   = useState<IsobarLine[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error,   setError]     = useState<string | null>(null);

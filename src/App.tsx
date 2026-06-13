@@ -5,7 +5,7 @@ import { Controls } from './components/Controls';
 import { Legend } from './components/Legend';
 import { useRadarFrames } from './hooks/useRadarFrames';
 import { useIsobars } from './hooks/useIsobars';
-import type { Region } from './hooks/useIsobars';
+import type { FlyTarget, Favourite } from './types';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
   state = { error: null };
@@ -22,15 +22,23 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: string |
   }
 }
 
+const STORAGE_KEY = 'radar-favourites';
+
+function loadFavourites(): Favourite[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]'); }
+  catch { return []; }
+}
+
 export default function App() {
-  const [region, setRegion] = useState<Region>('australia');
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [radarOpacity, setRadarOpacity] = useState(0.7);
   const [isobarOpacity, setIsobarOpacity] = useState(0.9);
+  const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null);
+  const [favourites, setFavourites] = useState<Favourite[]>(loadFavourites);
 
   const { frames, loading: radarLoading, error: radarError } = useRadarFrames();
-  const { isobars, loading: isobarLoading, error: isobarError } = useIsobars(region);
+  const { isobars, loading: isobarLoading, error: isobarError } = useIsobars();
 
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -51,15 +59,29 @@ export default function App() {
     return () => clearInterval(timerRef.current);
   }, [isPlaying, frames.length]);
 
-  const handleRegionChange = useCallback((r: Region) => {
-    setRegion(r);
+  const handleFlyTo = useCallback((t: FlyTarget) => setFlyTarget({ ...t }), []);
+
+  const handleSaveFavourite = useCallback((fav: Favourite) => {
+    setFavourites(prev => {
+      const next = [...prev.filter(f => f.name !== fav.name), fav].slice(-3);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const handleDeleteFavourite = useCallback((name: string) => {
+    setFavourites(prev => {
+      const next = prev.filter(f => f.name !== name);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   return (
     <ErrorBoundary>
     <div className="app">
       <RadarMap
-        region={region}
+        flyTarget={flyTarget}
         frames={frames}
         currentFrame={currentFrame}
         radarOpacity={radarOpacity}
@@ -80,12 +102,14 @@ export default function App() {
         isPlaying={isPlaying}
         radarOpacity={radarOpacity}
         isobarOpacity={isobarOpacity}
-        region={region}
+        favourites={favourites}
+        onFlyTo={handleFlyTo}
+        onSaveFavourite={handleSaveFavourite}
+        onDeleteFavourite={handleDeleteFavourite}
         onPlayPause={() => setIsPlaying(p => !p)}
         onFrameChange={setCurrentFrame}
         onRadarOpacity={setRadarOpacity}
         onIsobarOpacity={setIsobarOpacity}
-        onRegionChange={handleRegionChange}
       />
     </div>
     </ErrorBoundary>

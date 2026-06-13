@@ -1,24 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-import type { Region } from '../hooks/useIsobars';
+import type { FlyTarget } from '../types';
 
-const VIEWS: Record<Region, { center: [number, number]; zoom: number }> = {
-  sydney:    { center: [-33.87, 151.21], zoom: 5 },
-  australia: { center: [-27.0,  133.0],  zoom: 4 },
-  indopac:   { center: [ -5.0,  120.0],  zoom: 3 },
-  global:    { center: [  20.0,   10.0], zoom: 2 },
-};
-
-export function MapController({ region }: { region: Region }) {
+export function MapController({ flyTarget }: { flyTarget: FlyTarget | null }) {
   const map = useMap();
-  const prev = useRef<Region | null>(null);
 
   useEffect(() => {
-    if (prev.current === region) return;
-    prev.current = region;
-    const { center, zoom } = VIEWS[region];
-    map.flyTo(center, zoom, { duration: 1.2 });
-  }, [region, map]);
+    if (!flyTarget) return;
+    map.flyTo([flyTarget.lat, flyTarget.lon], flyTarget.zoom, { duration: 1.2 });
+  }, [flyTarget, map]);
 
   return null;
 }
