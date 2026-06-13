@@ -127,8 +127,14 @@ export function Controls({ frames, currentIndex, isPlaying, radarOpacity, isobar
     if (!query.trim()) return;
     setIsSearching(true);
     const res = await geocode(query.trim());
-    setResults(res);
     setIsSearching(false);
+    if (res.length === 0) return;
+    // Auto-fly to best result immediately; show the rest as alternatives
+    const best = res[0];
+    setLastResult(best);
+    setQuery(shortName(best.display_name));
+    onFlyTo({ lat: parseFloat(best.lat), lon: parseFloat(best.lon), zoom: zoomFromBBox(best.boundingbox) });
+    setResults(res.slice(1));
   };
 
   const selectResult = (r: NominatimResult) => {
