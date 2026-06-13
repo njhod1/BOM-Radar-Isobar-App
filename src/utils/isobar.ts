@@ -15,28 +15,30 @@ export interface IsobarLine {
 }
 
 // Coarse global grid — 20×36 = 720 points, fetched as 3 parallel chunks
+// ±179 avoids the exact date-line coordinate while maximising coverage
 export const GLOBAL_GRID: GridConfig = {
   latMin: -80,
   latMax: 80,
-  lonMin: -175,
-  lonMax: 175,
+  lonMin: -179,
+  lonMax: 179,
   nRows: 20,
   nCols: 36,
 };
 
-// Dense local grid derived from the current map viewport + 40% padding
+// Dense local grid derived from the current map viewport + 70% padding so
+// the grid boundary is always well off-screen
 export function viewportGrid(
   south: number,
   north: number,
   west: number,
   east: number,
 ): GridConfig {
-  const latPad = (north - south) * 0.4;
-  const lonPad = (east - west) * 0.4;
+  const latPad = (north - south) * 0.7;
+  const lonPad = (east - west) * 0.7;
   const latMin = Math.max(-80, south - latPad);
   const latMax = Math.min(80, north + latPad);
-  const lonMin = Math.max(-175, west - lonPad);
-  const lonMax = Math.min(175, east + lonPad);
+  const lonMin = Math.max(-179, west - lonPad);
+  const lonMax = Math.min(179, east + lonPad);
   // ~2° target spacing, capped at 15×15
   const nRows = Math.min(15, Math.max(5, Math.round((latMax - latMin) / 2)));
   const nCols = Math.min(15, Math.max(5, Math.round((lonMax - lonMin) / 2)));
