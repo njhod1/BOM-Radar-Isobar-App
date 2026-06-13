@@ -15,15 +15,15 @@ export interface IsobarLine {
 }
 
 // Covers SE Australia + surrounds — wide enough to capture synoptic pressure systems
-// One large grid shared by all views — edges stay off-screen at any normal zoom
-// lon capped at 178 to stay within Open-Meteo's −180..180 accepted range
+// Wide grid covering Indian Ocean → western Pacific, tropics → Southern Ocean
+// 20×20 = 400 points in one batch; lon stays ≤178 to stay within Open-Meteo bounds
 export const AUSTRALASIA_GRID: GridConfig = {
-  latMin: -60,
-  latMax: -8,
-  lonMin: 88,
+  latMin: -65,
+  latMax: +35,
+  lonMin: 40,
   lonMax: 178,
-  nRows: 15,
-  nCols: 15,
+  nRows: 20,
+  nCols: 20,
 };
 
 // Flat array of [lat, lon] pairs in row-major order (row 0 = north edge)

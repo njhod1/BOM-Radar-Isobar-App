@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   computeIsobars,
   gridPoints,
@@ -7,7 +7,7 @@ import {
   type IsobarLine,
 } from '../utils/isobar';
 
-export type Region = 'sydney' | 'australia';
+export type Region = 'sydney' | 'australia' | 'indopac';
 
 interface OMPoint {
   current: { pressure_msl: number | null };

@@ -80,6 +80,12 @@ export function Controls({
         >
           Australia
         </button>
+        <button
+          className={`region-tab${region === 'indopac' ? ' active' : ''}`}
+          onClick={() => onRegionChange('indopac')}
+        >
+          Indo-Pac
+        </button>
       </div>
 
       {/* Timeline */}
