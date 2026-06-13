@@ -20,7 +20,7 @@ const LOCAL_CACHE_MAX = 12;
 const localCache = new Map<string, { data: IsobarLine[]; at: number }>();
 
 interface OMPoint {
-  current: { pressure_msl: number | null };
+  hourly: { pressure_msl: number[] };
 }
 
 async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
@@ -29,25 +29,27 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
-      `&current=pressure_msl&timezone=UTC&forecast_days=1`,
+      `&hourly=pressure_msl&timezone=UTC&forecast_days=1`,
     );
     if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
-    const raw: OMPoint | OMPoint[] = await r.json();
-    const arr = Array.isArray(raw) ? raw : [raw];
-    return arr.map(p => p.current.pressure_msl ?? 1013.25);
+    const raw = await r.json();
+    if (raw.error) throw new Error(raw.reason ?? 'Open-Meteo error');
+    const arr: OMPoint[] = Array.isArray(raw) ? raw : [raw];
+    const h = new Date().getUTCHours();
+    return arr.map(p => p.hourly?.pressure_msl?.[h] ?? 1013.25);
   } catch {
-    // Return neutral pressure for this chunk so other chunks still render
     return chunk.map(() => 1013.25);
   }
 }
 
 async function fetchPressure(cfg: GridConfig): Promise<number[]> {
   const pts = gridPoints(cfg);
-  // Chunk into ≤300 points per request; each chunk fails independently
   const chunks: Array<[number, number][]> = [];
-  for (let i = 0; i < pts.length; i += 300) chunks.push(pts.slice(i, i + 300));
-  const results = await Promise.all(chunks.map(fetchChunk));
-  return results.flat();
+  for (let i = 0; i < pts.length; i += 50) chunks.push(pts.slice(i, i + 50));
+  // Sequential to avoid rate limiting
+  const vals: number[] = [];
+  for (const chunk of chunks) vals.push(...await fetchChunk(chunk));
+  return vals;
 }
 
 function localKey(cfg: GridConfig): string {

@@ -8,8 +8,11 @@ import {
 } from '../utils/isobar';
 
 interface OMPoint {
-  current: { pressure_msl: number | null };
+  hourly: { pressure_msl: number[] };
 }
+
+// current UTC hour → index into the hourly array (which starts at 00:00 UTC)
+const nowHour = () => new Date().getUTCHours();
 
 async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
   const lats = chunk.map(([lat]) => lat.toFixed(2)).join(',');
@@ -17,13 +20,14 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
-      `&current=pressure_msl&timezone=UTC&forecast_days=1`,
+      `&hourly=pressure_msl&timezone=UTC&forecast_days=1`,
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const raw = await r.json();
     if (raw.error) throw new Error(raw.reason ?? 'Open-Meteo error');
     const arr: OMPoint[] = Array.isArray(raw) ? raw : [raw];
-    return arr.map(p => p.current?.pressure_msl ?? 1013.25);
+    const h = nowHour();
+    return arr.map(p => p.hourly?.pressure_msl?.[h] ?? 1013.25);
   } catch (e) {
     console.error('Isobar chunk failed:', e);
     return chunk.map(() => 1013.25);
