@@ -65,11 +65,32 @@ function xyToLatLon(x: number, y: number, cfg: GridConfig): [number, number] {
   return [lat, lon];
 }
 
+// 3×3 box blur — reduces sharp single-cell spikes that cause concentric-ring artifacts
+function smooth(vals: number[], nRows: number, nCols: number): number[] {
+  return vals.map((_, i) => {
+    const r = Math.floor(i / nCols), c = i % nCols;
+    let sum = 0, count = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < nRows && nc >= 0 && nc < nCols) {
+          sum += vals[nr * nCols + nc]; count++;
+        }
+      }
+    }
+    return sum / count;
+  });
+}
+
 const THRESHOLDS = Array.from({ length: 16 }, (_, i) => 980 + i * 4); // 980..1040 hPa
 
 export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] {
+  // Three smoothing passes tame sharp single-cell gradients on coarse grids
+  let v = smooth(values, cfg.nRows, cfg.nCols);
+  v = smooth(v, cfg.nRows, cfg.nCols);
+  v = smooth(v, cfg.nRows, cfg.nCols);
   const gen = contours().size([cfg.nCols, cfg.nRows]).thresholds(THRESHOLDS);
-  return gen(values)
+  return gen(v)
     .filter(f => f.coordinates.length > 0)
     .map(f => ({
       pressure: f.value,

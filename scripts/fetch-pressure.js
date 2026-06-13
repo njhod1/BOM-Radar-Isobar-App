@@ -5,7 +5,8 @@
 
 import { writeFileSync } from 'fs';
 
-const GRID = { latMin: -75, latMax: 75, lonMin: -179, lonMax: 179, nRows: 10, nCols: 12 };
+// 15×20 = 300 points — good isobar resolution; fine for server-side fetch with no rate limits
+const GRID = { latMin: -75, latMax: 75, lonMin: -179, lonMax: 179, nRows: 15, nCols: 20 };
 
 function gridPoints(cfg) {
   const pts = [];

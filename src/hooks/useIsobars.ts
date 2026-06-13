@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   computeIsobars,
-  GLOBAL_GRID,
   type GridConfig,
   type IsobarLine,
 } from '../utils/isobar';
@@ -39,7 +38,7 @@ function lsSave(data: IsobarLine[]) {
   catch { /* storage full */ }
 }
 
-async function fetchFromGitHub(): Promise<number[]> {
+async function fetchFromGitHub(): Promise<{ values: number[]; grid: GridConfig }> {
   // Cache-bust every 5 minutes so we pick up fresh Action commits
   const bust = Math.floor(Date.now() / 300_000);
   const res = await fetch(`${GH_DATA_URL}?t=${bust}`);
@@ -49,7 +48,7 @@ async function fetchFromGitHub(): Promise<number[]> {
   if (Date.now() - data.ts > DATA_MAX_AGE) throw new Error('Data older than 90 min');
   const range = Math.max(...data.values) - Math.min(...data.values);
   if (range < 0.5) throw new Error('Data flat');
-  return data.values;
+  return { values: data.values, grid: data.grid };
 }
 
 export function useIsobars() {
@@ -77,8 +76,8 @@ export function useIsobars() {
     setLoading(true);
     setError(null);
     fetchFromGitHub()
-      .then(vals => {
-        const lines = computeIsobars(vals, GLOBAL_GRID);
+      .then(({ values, grid }) => {
+        const lines = computeIsobars(values, grid);
         mem.data = lines;
         mem.at   = Date.now();
         lsSave(lines);
