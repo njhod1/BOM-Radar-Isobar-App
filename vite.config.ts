@@ -60,15 +60,6 @@ export default defineConfig({
               expiration: { maxEntries: 500, maxAgeSeconds: 86400 },
             },
           },
-          {
-            urlPattern: /^https:\/\/api\.open-meteo\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'weather-data',
-              networkTimeoutSeconds: 10,
-              expiration: { maxEntries: 100, maxAgeSeconds: 1800 },
-            },
-          },
         ],
       },
     }),

@@ -32,13 +32,15 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
 
 async function fetchPressure(cfg: GridConfig): Promise<number[]> {
   const pts = gridPoints(cfg);
-  // ≤50 points per request keeps URLs short and avoids server-side batch limits
   const chunks: Array<[number, number][]> = [];
   for (let i = 0; i < pts.length; i += 50) chunks.push(pts.slice(i, i + 50));
-  const results = await Promise.all(chunks.map(fetchChunk));
-  const vals = results.flat();
 
-  // If every value is the fallback, the API failed silently — surface the failure
+  // Sequential — parallel calls consistently trigger Open-Meteo rate limits
+  const vals: number[] = [];
+  for (const chunk of chunks) {
+    vals.push(...await fetchChunk(chunk));
+  }
+
   const range = Math.max(...vals) - Math.min(...vals);
   if (range < 0.5) throw new Error('Pressure data unavailable (Open-Meteo may be unreachable)');
 
