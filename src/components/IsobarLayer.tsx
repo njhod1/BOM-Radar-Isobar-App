@@ -63,6 +63,21 @@ function setLocalCache(key: string, data: IsobarLine[]) {
   localCache.set(key, { data, at: Date.now() });
 }
 
+// Split a ring wherever the longitude jumps >90° — removes antimeridian and grid-edge artifacts
+function splitAtAntimeridian(ring: [number, number][]): Array<[number, number][]> {
+  const segs: Array<[number, number][]> = [];
+  let cur: [number, number][] = [];
+  for (let i = 0; i < ring.length; i++) {
+    if (i > 0 && Math.abs(ring[i][1] - ring[i - 1][1]) > 90) {
+      if (cur.length > 1) segs.push(cur);
+      cur = [];
+    }
+    cur.push(ring[i]);
+  }
+  if (cur.length > 1) segs.push(cur);
+  return segs;
+}
+
 function labelPoint(
   ring: [number, number][],
   bounds: L.LatLngBounds,
@@ -161,13 +176,17 @@ export function IsobarLayer({ globalIsobars, opacity }: Props) {
         iso.rings.map((ring, ri) => {
           if (ring.length < MIN_RING_POINTS) return null;
           const color = isobarColor(iso.pressure);
+          const segs = splitAtAntimeridian(ring);
           const pos = labelPoint(ring, view.bounds, view.center);
           return (
             <React.Fragment key={`${iso.pressure}-${ri}`}>
-              <Polyline
-                positions={ring}
-                pathOptions={{ color, weight: isobarWeight(iso.pressure), opacity, fill: false, interactive: false }}
-              />
+              {segs.map((seg, si) => (
+                <Polyline
+                  key={si}
+                  positions={seg}
+                  pathOptions={{ color, weight: isobarWeight(iso.pressure), opacity, fill: false, interactive: false }}
+                />
+              ))}
               {pos && (
                 <Marker
                   position={pos}

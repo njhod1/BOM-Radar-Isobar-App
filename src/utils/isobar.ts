@@ -85,10 +85,8 @@ function smooth(vals: number[], nRows: number, nCols: number): number[] {
 const THRESHOLDS = Array.from({ length: 16 }, (_, i) => 980 + i * 4); // 980..1040 hPa
 
 export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] {
-  // Three smoothing passes tame sharp single-cell gradients on coarse grids
-  let v = smooth(values, cfg.nRows, cfg.nCols);
-  v = smooth(v, cfg.nRows, cfg.nCols);
-  v = smooth(v, cfg.nRows, cfg.nCols);
+  // One smoothing pass tames single-cell spikes without compressing the pressure range
+  const v = smooth(values, cfg.nRows, cfg.nCols);
   const gen = contours().size([cfg.nCols, cfg.nRows]).thresholds(THRESHOLDS);
   return gen(v)
     .filter(f => f.coordinates.length > 0)
