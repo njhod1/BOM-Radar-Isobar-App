@@ -89,10 +89,11 @@ export default function App() {
         isobars={isobars}
       />
       <Legend />
-      {(radarLoading || radarError || isobarLoading || isobarError) && (
+      {(radarLoading || radarError || (frames.length < 3 && !radarError) || isobarLoading || isobarError) && (
         <div className={`status-bar${radarError || isobarError ? ' error' : ''}`}>
           {radarError ? `Radar error: ${radarError}` :
            isobarError ? `Isobar error: ${isobarError}` :
+           frames.length < 3 ? 'Loading radar history…' :
            radarLoading ? 'Loading radar…' : 'Loading isobars…'}
         </div>
       )}

@@ -39,6 +39,8 @@ export function useRadarFrames() {
         if (!cancelled) {
           setFrames(mapped);
           setError(null);
+          // If we got too few frames the API may have returned stale/partial data — retry soon
+          if (mapped.length < 3) setTimeout(load, 15_000);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Radar load failed');
