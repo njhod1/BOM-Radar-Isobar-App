@@ -15,8 +15,9 @@ interface OMPoint {
 const nowHour = () => new Date().getUTCHours();
 
 let lastChunkError = '';
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
+async function fetchChunk(chunk: [number, number][], attempt = 0): Promise<number[]> {
   const lats = chunk.map(([lat]) => lat.toFixed(2)).join(',');
   const lons = chunk.map(([, lon]) => lon.toFixed(2)).join(',');
   try {
@@ -24,6 +25,10 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
       `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
       `&hourly=pressure_msl&timezone=UTC&forecast_days=1`,
     );
+    if (r.status === 429 && attempt < 3) {
+      await sleep(3000 * (attempt + 1));
+      return fetchChunk(chunk, attempt + 1);
+    }
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const raw = await r.json();
     if (raw.error) throw new Error(raw.reason ?? 'Open-Meteo error');
@@ -40,12 +45,13 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
 async function fetchPressure(cfg: GridConfig): Promise<number[]> {
   const pts = gridPoints(cfg);
   const chunks: Array<[number, number][]> = [];
-  for (let i = 0; i < pts.length; i += 50) chunks.push(pts.slice(i, i + 50));
+  // 100 pts/chunk → 3 requests for 300-pt global grid (was 6 at 50 pts/chunk)
+  for (let i = 0; i < pts.length; i += 100) chunks.push(pts.slice(i, i + 100));
 
-  // Sequential — parallel calls consistently trigger Open-Meteo rate limits
   const vals: number[] = [];
-  for (const chunk of chunks) {
-    vals.push(...await fetchChunk(chunk));
+  for (let i = 0; i < chunks.length; i++) {
+    if (i > 0) await sleep(400); // space requests to avoid burst rate limit
+    vals.push(...await fetchChunk(chunks[i]));
   }
 
   const range = Math.max(...vals) - Math.min(...vals);
