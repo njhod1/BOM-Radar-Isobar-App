@@ -25,39 +25,31 @@ interface OMPoint {
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-async function fetchChunk(chunk: [number, number][], attempt = 0): Promise<number[]> {
-  const lats = chunk.map(([lat]) => lat.toFixed(2)).join(',');
-  const lons = chunk.map(([, lon]) => lon.toFixed(2)).join(',');
+async function fetchPressure(cfg: GridConfig, attempt = 0): Promise<number[]> {
+  const pts = gridPoints(cfg);
+  const lats = pts.map(([lat]) => lat.toFixed(2)).join(',');
+  const lons = pts.map(([, lon]) => lon.toFixed(2)).join(',');
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
       `&hourly=pressure_msl&timezone=UTC&forecast_days=1`,
     );
-    if (r.status === 429 && attempt < 3) {
-      await sleep(3000 * (attempt + 1));
-      return fetchChunk(chunk, attempt + 1);
+    if (r.status === 429) {
+      if (attempt < 4) {
+        await sleep(5000 * (attempt + 1));
+        return fetchPressure(cfg, attempt + 1);
+      }
+      return pts.map(() => 1013.25);
     }
-    if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
+    if (!r.ok) return pts.map(() => 1013.25);
     const raw = await r.json();
-    if (raw.error) throw new Error(raw.reason ?? 'Open-Meteo error');
+    if (raw.error) return pts.map(() => 1013.25);
     const arr: OMPoint[] = Array.isArray(raw) ? raw : [raw];
     const h = new Date().getUTCHours();
     return arr.map(p => p.hourly?.pressure_msl?.[h] ?? 1013.25);
   } catch {
-    return chunk.map(() => 1013.25);
+    return pts.map(() => 1013.25);
   }
-}
-
-async function fetchPressure(cfg: GridConfig): Promise<number[]> {
-  const pts = gridPoints(cfg);
-  const chunks: Array<[number, number][]> = [];
-  for (let i = 0; i < pts.length; i += 100) chunks.push(pts.slice(i, i + 100));
-  const vals: number[] = [];
-  for (let i = 0; i < chunks.length; i++) {
-    if (i > 0) await sleep(400);
-    vals.push(...await fetchChunk(chunks[i]));
-  }
-  return vals;
 }
 
 function localKey(cfg: GridConfig): string {
