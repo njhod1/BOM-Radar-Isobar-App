@@ -3,7 +3,7 @@ import { useMap } from 'react-leaflet';
 import type { Region } from '../hooks/useIsobars';
 
 const VIEWS: Record<Region, { center: [number, number]; zoom: number }> = {
-  sydney: { center: [-33.87, 151.21], zoom: 7 },
+  sydney: { center: [-33.87, 151.21], zoom: 5 },
   australia: { center: [-27.0, 133.0], zoom: 4 },
 };
 

@@ -14,11 +14,12 @@ export interface IsobarLine {
   rings: Array<[number, number][]>; // each ring: [[lat, lon], ...]
 }
 
+// Covers SE Australia + surrounds — wide enough to capture synoptic pressure systems
 export const SYDNEY_GRID: GridConfig = {
-  latMin: -38,
-  latMax: -29,
-  lonMin: 147,
-  lonMax: 156,
+  latMin: -44,
+  latMax: -22,
+  lonMin: 140,
+  lonMax: 165,
   nRows: 15,
   nCols: 15,
 };
