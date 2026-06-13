@@ -126,7 +126,7 @@ body,
   background: #fff;
 }
 
-.search-input::placeholder { color: #94a3b8; }
+.search-input::placeholder { color: #64748b; }
 
 .nav-btn {
   width: 34px;

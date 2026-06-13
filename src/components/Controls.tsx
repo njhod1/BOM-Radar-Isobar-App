@@ -183,6 +183,7 @@ export function Controls({ frames, currentIndex, isPlaying, radarOpacity, isobar
             value={query}
             onChange={e => setQuery(e.target.value)}
             autoComplete="off"
+            onFocus={e => e.target.select()}
           />
           <button type="submit" className="nav-btn" aria-label="Search" disabled={isSearching}>
             {isSearching ? <span style={{ fontSize: 13 }}>…</span> : <SearchIcon />}
