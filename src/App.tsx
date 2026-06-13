@@ -4,6 +4,7 @@ import { RadarMap } from './components/RadarMap';
 import { Controls } from './components/Controls';
 import { Legend } from './components/Legend';
 import { useRadarFrames } from './hooks/useRadarFrames';
+import { useIsobars } from './hooks/useIsobars';
 import type { Region } from './hooks/useIsobars';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
@@ -29,6 +30,7 @@ export default function App() {
   const [isobarOpacity, setIsobarOpacity] = useState(0.9);
 
   const { frames, loading: radarLoading, error: radarError } = useRadarFrames();
+  const { isobars, loading: isobarLoading, error: isobarError } = useIsobars(region);
 
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -62,11 +64,14 @@ export default function App() {
         currentFrame={currentFrame}
         radarOpacity={radarOpacity}
         isobarOpacity={isobarOpacity}
+        isobars={isobars}
       />
       <Legend />
-      {(radarLoading || radarError) && (
-        <div className={`status-bar${radarError ? ' error' : ''}`}>
-          {radarError ? `Radar error: ${radarError}` : 'Loading radar…'}
+      {(radarLoading || radarError || isobarLoading || isobarError) && (
+        <div className={`status-bar${radarError || isobarError ? ' error' : ''}`}>
+          {radarError ? `Radar error: ${radarError}` :
+           isobarError ? `Isobar error: ${isobarError}` :
+           radarLoading ? 'Loading radar…' : 'Loading isobars…'}
         </div>
       )}
       <Controls

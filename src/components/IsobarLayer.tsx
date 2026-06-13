@@ -5,7 +5,6 @@ import {
   computeIsobars,
   gridPoints,
   viewportGrid,
-  GLOBAL_GRID,
   isobarColor,
   isobarWeight,
 } from '../utils/isobar';
@@ -13,13 +12,11 @@ import type { IsobarLine, GridConfig } from '../utils/isobar';
 
 // Switch from global (~8°) to local (~2°) grid at this zoom level
 const ZOOM_THRESHOLD = 4;
-const GLOBAL_TTL = 30 * 60 * 1000; // 30 min
 const LOCAL_TTL  = 10 * 60 * 1000; // 10 min
 const MIN_RING_POINTS = 5;
 const LOCAL_CACHE_MAX = 12;
 
-// Module-level caches survive re-renders
-const globalCache: { data: IsobarLine[] | null; at: number } = { data: null, at: 0 };
+// Module-level cache survives re-renders
 const localCache = new Map<string, { data: IsobarLine[]; at: number }>();
 
 interface OMPoint {
@@ -89,13 +86,13 @@ function makeLabelIcon(pressure: number, color: string): L.DivIcon {
 }
 
 interface Props {
+  globalIsobars: IsobarLine[];
   opacity: number;
 }
 
-export function IsobarLayer({ opacity }: Props) {
+export function IsobarLayer({ globalIsobars, opacity }: Props) {
   const map = useMap();
-  const [globalIsobars, setGlobalIsobars] = useState<IsobarLine[]>([]);
-  const [localIsobars,  setLocalIsobars]  = useState<IsobarLine[] | null>(null);
+  const [localIsobars, setLocalIsobars] = useState<IsobarLine[] | null>(null);
   const [view, setView] = useState(() => {
     // getBounds() throws "Map container has no size" if container hasn't laid out yet
     try {
@@ -118,22 +115,6 @@ export function IsobarLayer({ opacity }: Props) {
     map.on('zoomend', update);
     return () => { map.off('moveend', update); map.off('zoomend', update); };
   }, [map]);
-
-  // Fetch global grid once (cached 30 min)
-  useEffect(() => {
-    if (globalCache.data && Date.now() - globalCache.at < GLOBAL_TTL) {
-      setGlobalIsobars(globalCache.data);
-      return;
-    }
-    fetchPressure(GLOBAL_GRID)
-      .then(vals => {
-        const lines = computeIsobars(vals, GLOBAL_GRID);
-        globalCache.data = lines;
-        globalCache.at = Date.now();
-        setGlobalIsobars(lines);
-      })
-      .catch(console.error);
-  }, []);
 
   // Fetch local grid when zoomed in, refetch when viewport changes
   const boundsKey = [
