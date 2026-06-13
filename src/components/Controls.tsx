@@ -104,17 +104,25 @@ export function Controls({
           <NextIcon />
         </button>
 
-        <input
-          type="range"
-          className="timeline-slider"
-          min={0}
-          max={Math.max(0, frames.length - 1)}
-          value={currentIndex}
-          onChange={e => onFrameChange(Number(e.target.value))}
-        />
+        <div className="timeline-track">
+          <input
+            type="range"
+            className="timeline-slider"
+            min={0}
+            max={Math.max(0, frames.length - 1)}
+            value={currentIndex}
+            onChange={e => onFrameChange(Number(e.target.value))}
+          />
+          <div className="timeline-labels">
+            <span>{frames.length > 0 ? `${Math.round((frames.length - 1 - currentIndex) * 10)}m ago` : ''}</span>
+            <span className={currentIndex === frames.length - 1 ? 'now-label' : ''}>Now</span>
+          </div>
+        </div>
 
         <span className="frame-time">
-          {current ? formatTime(current.time) : '--:--'}
+          {currentIndex === frames.length - 1 && frames.length > 0
+            ? 'Now'
+            : current ? formatTime(current.time) : '--:--'}
         </span>
       </div>
 

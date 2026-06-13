@@ -19,8 +19,8 @@ export const SYDNEY_GRID: GridConfig = {
   latMax: -29,
   lonMin: 147,
   lonMax: 156,
-  nRows: 10,
-  nCols: 10,
+  nRows: 15,
+  nCols: 15,
 };
 
 export const AUSTRALIA_GRID: GridConfig = {
@@ -28,8 +28,8 @@ export const AUSTRALIA_GRID: GridConfig = {
   latMax: -10,
   lonMin: 112,
   lonMax: 154,
-  nRows: 12,
-  nCols: 12,
+  nRows: 15,
+  nCols: 15,
 };
 
 // Flat array of [lat, lon] pairs in row-major order (row 0 = north edge)

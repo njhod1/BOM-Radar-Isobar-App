@@ -2,6 +2,7 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import { AnimatedRadar } from './AnimatedRadar';
 import { IsobarLayer } from './IsobarLayer';
 import { MapController } from './MapController';
+import { LocationButton } from './LocationButton';
 import type { RadarFrame } from '../hooks/useRadarFrames';
 import type { IsobarLine } from '../utils/isobar';
 import type { Region } from '../hooks/useIsobars';
@@ -33,6 +34,7 @@ export function RadarMap({ region, frames, currentFrame, radarOpacity, isobars, 
       <MapController region={region} />
       <AnimatedRadar frames={frames} currentIndex={currentFrame} opacity={radarOpacity} />
       <IsobarLayer isobars={isobars} opacity={isobarOpacity} />
+      <LocationButton />
     </MapContainer>
   );
 }
