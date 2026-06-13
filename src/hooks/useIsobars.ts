@@ -14,6 +14,8 @@ interface OMPoint {
 // current UTC hour → index into the hourly array (which starts at 00:00 UTC)
 const nowHour = () => new Date().getUTCHours();
 
+let lastChunkError = '';
+
 async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
   const lats = chunk.map(([lat]) => lat.toFixed(2)).join(',');
   const lons = chunk.map(([, lon]) => lon.toFixed(2)).join(',');
@@ -29,7 +31,8 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
     const h = nowHour();
     return arr.map(p => p.hourly?.pressure_msl?.[h] ?? 1013.25);
   } catch (e) {
-    console.error('Isobar chunk failed:', e);
+    lastChunkError = e instanceof Error ? e.message : String(e);
+    console.error('Isobar chunk failed:', lastChunkError);
     return chunk.map(() => 1013.25);
   }
 }
@@ -46,7 +49,7 @@ async function fetchPressure(cfg: GridConfig): Promise<number[]> {
   }
 
   const range = Math.max(...vals) - Math.min(...vals);
-  if (range < 0.5) throw new Error('Pressure data unavailable (Open-Meteo may be unreachable)');
+  if (range < 0.5) throw new Error(`Pressure data unavailable — ${lastChunkError || 'all values identical'}`);
 
   return vals;
 }
