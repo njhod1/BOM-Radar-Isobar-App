@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - claude/weather-radar-app-assessment-c4kwd6
+    paths-ignore:
+      - 'public/pressure-data.json'   # data-only commits don't need a site rebuild
   workflow_dispatch:
 
 permissions:

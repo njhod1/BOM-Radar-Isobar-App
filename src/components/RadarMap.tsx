@@ -21,6 +21,7 @@ export function RadarMap({ flyTarget, frames, currentFrame, radarOpacity, isobar
     <MapContainer
       center={[-27.0, 133.0]}
       zoom={4}
+      minZoom={2}
       zoomControl={false}
       className="map-container"
       attributionControl={true}
