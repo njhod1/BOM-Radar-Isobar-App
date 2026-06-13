@@ -34,13 +34,17 @@ async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
 
 async function fetchPressure(cfg: GridConfig): Promise<number[]> {
   const pts = gridPoints(cfg);
-  // Two requests of ≤150 points each — proven safe URL length
-  const mid = Math.ceil(pts.length / 2);
-  const [a, b] = await Promise.all([
-    fetchChunk(pts.slice(0, mid)),
-    fetchChunk(pts.slice(mid)),
-  ]);
-  return [...a, ...b];
+  // ≤50 points per request keeps URLs short and avoids server-side batch limits
+  const chunks: Array<[number, number][]> = [];
+  for (let i = 0; i < pts.length; i += 50) chunks.push(pts.slice(i, i + 50));
+  const results = await Promise.all(chunks.map(fetchChunk));
+  const vals = results.flat();
+
+  // If every value is the fallback, the API failed silently — surface the failure
+  const range = Math.max(...vals) - Math.min(...vals);
+  if (range < 0.5) throw new Error('Pressure data unavailable (Open-Meteo may be unreachable)');
+
+  return vals;
 }
 
 const GLOBAL_TTL = 30 * 60 * 1000;
