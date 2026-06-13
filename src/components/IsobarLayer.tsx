@@ -26,29 +26,31 @@ interface OMPoint {
   current: { pressure_msl: number | null };
 }
 
+async function fetchChunk(chunk: [number, number][]): Promise<number[]> {
+  const lats = chunk.map(([lat]) => lat.toFixed(2)).join(',');
+  const lons = chunk.map(([, lon]) => lon.toFixed(2)).join(',');
+  try {
+    const r = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
+      `&current=pressure_msl&timezone=UTC&forecast_days=1`,
+    );
+    if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
+    const raw: OMPoint | OMPoint[] = await r.json();
+    const arr = Array.isArray(raw) ? raw : [raw];
+    return arr.map(p => p.current.pressure_msl ?? 1013.25);
+  } catch {
+    // Return neutral pressure for this chunk so other chunks still render
+    return chunk.map(() => 1013.25);
+  }
+}
+
 async function fetchPressure(cfg: GridConfig): Promise<number[]> {
   const pts = gridPoints(cfg);
-  // Chunk into ≤240 points per request to keep URLs short
+  // Chunk into ≤300 points per request; each chunk fails independently
   const chunks: Array<[number, number][]> = [];
-  for (let i = 0; i < pts.length; i += 240) chunks.push(pts.slice(i, i + 240));
-
-  const responses = await Promise.all(
-    chunks.map(chunk => {
-      const lats = chunk.map(([lat]) => lat.toFixed(2)).join(',');
-      const lons = chunk.map(([, lon]) => lon.toFixed(2)).join(',');
-      return fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
-        `&current=pressure_msl&timezone=UTC&forecast_days=1`,
-      ).then(r => {
-        if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
-        return r.json() as Promise<OMPoint | OMPoint[]>;
-      });
-    }),
-  );
-
-  return responses
-    .flatMap(raw => (Array.isArray(raw) ? raw : [raw]))
-    .map(p => p.current.pressure_msl ?? 1013.25);
+  for (let i = 0; i < pts.length; i += 300) chunks.push(pts.slice(i, i + 300));
+  const results = await Promise.all(chunks.map(fetchChunk));
+  return results.flat();
 }
 
 function localKey(cfg: GridConfig): string {

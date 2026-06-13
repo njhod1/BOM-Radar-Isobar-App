@@ -14,15 +14,14 @@ export interface IsobarLine {
   rings: Array<[number, number][]>; // each ring: [[lat, lon], ...]
 }
 
-// Coarse global grid — 20×36 = 720 points, fetched as 3 parallel chunks
-// ±179 avoids the exact date-line coordinate while maximising coverage
+// Coarse global grid — 15×20 = 300 points, fits in a single API request
 export const GLOBAL_GRID: GridConfig = {
-  latMin: -80,
-  latMax: 80,
+  latMin: -75,
+  latMax: 75,
   lonMin: -179,
   lonMax: 179,
-  nRows: 20,
-  nCols: 36,
+  nRows: 15,
+  nCols: 20,
 };
 
 // Dense local grid derived from the current map viewport + 70% padding so

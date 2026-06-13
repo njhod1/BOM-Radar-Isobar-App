@@ -32,9 +32,9 @@ export default function App() {
 
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
-  // Jump to latest frame when frames first arrive
+  // Default to second-to-last frame — the very latest is often still assembling
   useEffect(() => {
-    if (frames.length > 0) setCurrentFrame(frames.length - 1);
+    if (frames.length > 0) setCurrentFrame(Math.max(0, frames.length - 2));
   }, [frames.length]);
 
   // Animation loop
