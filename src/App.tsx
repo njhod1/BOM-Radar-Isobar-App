@@ -3,17 +3,16 @@ import { RadarMap } from './components/RadarMap';
 import { Controls } from './components/Controls';
 import { Legend } from './components/Legend';
 import { useRadarFrames } from './hooks/useRadarFrames';
-import { useIsobars, type Region } from './hooks/useIsobars';
+import type { Region } from './hooks/useIsobars';
 
 export default function App() {
-  const [region, setRegion] = useState<Region>('sydney');
+  const [region, setRegion] = useState<Region>('australia');
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [radarOpacity, setRadarOpacity] = useState(0.7);
   const [isobarOpacity, setIsobarOpacity] = useState(0.9);
 
   const { frames, loading: radarLoading, error: radarError } = useRadarFrames();
-  const { isobars, loading: isobarLoading, error: isobarError } = useIsobars(region);
 
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -38,14 +37,6 @@ export default function App() {
     setRegion(r);
   }, []);
 
-  const statusMessage = (() => {
-    if (radarError) return { text: `Radar error: ${radarError}`, error: true };
-    if (isobarError) return { text: `Isobar error: ${isobarError}`, error: true };
-    if (radarLoading) return { text: 'Loading radar…', error: false };
-    if (isobarLoading) return { text: 'Computing isobars…', error: false };
-    return null;
-  })();
-
   return (
     <div className="app">
       <RadarMap
@@ -53,13 +44,12 @@ export default function App() {
         frames={frames}
         currentFrame={currentFrame}
         radarOpacity={radarOpacity}
-        isobars={isobars}
         isobarOpacity={isobarOpacity}
       />
       <Legend />
-      {statusMessage && (
-        <div className={`status-bar${statusMessage.error ? ' error' : ''}`}>
-          {statusMessage.text}
+      {(radarLoading || radarError) && (
+        <div className={`status-bar${radarError ? ' error' : ''}`}>
+          {radarError ? `Radar error: ${radarError}` : 'Loading radar…'}
         </div>
       )}
       <Controls

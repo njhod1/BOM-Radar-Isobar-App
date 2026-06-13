@@ -4,7 +4,6 @@ import { IsobarLayer } from './IsobarLayer';
 import { MapController } from './MapController';
 import { LocationButton } from './LocationButton';
 import type { RadarFrame } from '../hooks/useRadarFrames';
-import type { IsobarLine } from '../utils/isobar';
 import type { Region } from '../hooks/useIsobars';
 
 interface Props {
@@ -12,15 +11,14 @@ interface Props {
   frames: RadarFrame[];
   currentFrame: number;
   radarOpacity: number;
-  isobars: IsobarLine[];
   isobarOpacity: number;
 }
 
-export function RadarMap({ region, frames, currentFrame, radarOpacity, isobars, isobarOpacity }: Props) {
+export function RadarMap({ region, frames, currentFrame, radarOpacity, isobarOpacity }: Props) {
   return (
     <MapContainer
-      center={[-33.87, 151.21]}
-      zoom={7}
+      center={[-27.0, 133.0]}
+      zoom={4}
       zoomControl={false}
       className="map-container"
       attributionControl={true}
@@ -33,7 +31,7 @@ export function RadarMap({ region, frames, currentFrame, radarOpacity, isobars, 
       />
       <MapController region={region} />
       <AnimatedRadar frames={frames} currentIndex={currentFrame} opacity={radarOpacity} />
-      <IsobarLayer isobars={isobars} opacity={isobarOpacity} />
+      <IsobarLayer opacity={isobarOpacity} />
       <LocationButton />
     </MapContainer>
   );

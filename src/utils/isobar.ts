@@ -14,17 +14,34 @@ export interface IsobarLine {
   rings: Array<[number, number][]>; // each ring: [[lat, lon], ...]
 }
 
-// Covers SE Australia + surrounds — wide enough to capture synoptic pressure systems
-// Wide grid covering Indian Ocean → western Pacific, tropics → Southern Ocean
-// 20×20 = 400 points in one batch; lon stays ≤178 to stay within Open-Meteo bounds
-export const AUSTRALASIA_GRID: GridConfig = {
-  latMin: -65,
-  latMax: +35,
-  lonMin: 40,
-  lonMax: 178,
+// Coarse global grid — 20×36 = 720 points, fetched as 3 parallel chunks
+export const GLOBAL_GRID: GridConfig = {
+  latMin: -80,
+  latMax: 80,
+  lonMin: -175,
+  lonMax: 175,
   nRows: 20,
-  nCols: 20,
+  nCols: 36,
 };
+
+// Dense local grid derived from the current map viewport + 40% padding
+export function viewportGrid(
+  south: number,
+  north: number,
+  west: number,
+  east: number,
+): GridConfig {
+  const latPad = (north - south) * 0.4;
+  const lonPad = (east - west) * 0.4;
+  const latMin = Math.max(-80, south - latPad);
+  const latMax = Math.min(80, north + latPad);
+  const lonMin = Math.max(-175, west - lonPad);
+  const lonMax = Math.min(175, east + lonPad);
+  // ~2° target spacing, capped at 15×15
+  const nRows = Math.min(15, Math.max(5, Math.round((latMax - latMin) / 2)));
+  const nCols = Math.min(15, Math.max(5, Math.round((lonMax - lonMin) / 2)));
+  return { latMin, latMax, lonMin, lonMax, nRows, nCols };
+}
 
 // Flat array of [lat, lon] pairs in row-major order (row 0 = north edge)
 export function gridPoints(cfg: GridConfig): Array<[number, number]> {
