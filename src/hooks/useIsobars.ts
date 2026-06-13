@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   computeIsobars,
   gridPoints,
-  SYDNEY_GRID,
-  AUSTRALIA_GRID,
+  AUSTRALASIA_GRID,
   type GridConfig,
   type IsobarLine,
 } from '../utils/isobar';
@@ -32,19 +31,19 @@ async function fetchPressure(cfg: GridConfig): Promise<number[]> {
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 min
 
-export function useIsobars(region: Region) {
+// Single shared cache — grid is the same regardless of which region tab is active
+const sharedCache = { data: null as IsobarLine[] | null, at: 0 };
+
+export function useIsobars(_region: Region) {
   const [isobars, setIsobars] = useState<IsobarLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const cache = useRef<Map<Region, { data: IsobarLine[]; at: number }>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
-    const cfg = region === 'sydney' ? SYDNEY_GRID : AUSTRALIA_GRID;
-    const hit = cache.current.get(region);
 
-    if (hit && Date.now() - hit.at < CACHE_TTL) {
-      setIsobars(hit.data);
+    if (sharedCache.data && Date.now() - sharedCache.at < CACHE_TTL) {
+      setIsobars(sharedCache.data);
       setLoading(false);
       return;
     }
@@ -52,10 +51,11 @@ export function useIsobars(region: Region) {
     setLoading(true);
     setError(null);
 
-    fetchPressure(cfg)
+    fetchPressure(AUSTRALASIA_GRID)
       .then(vals => {
-        const lines = computeIsobars(vals, cfg);
-        cache.current.set(region, { data: lines, at: Date.now() });
+        const lines = computeIsobars(vals, AUSTRALASIA_GRID);
+        sharedCache.data = lines;
+        sharedCache.at = Date.now();
         if (!cancelled) { setIsobars(lines); setLoading(false); }
       })
       .catch(e => {
@@ -63,7 +63,7 @@ export function useIsobars(region: Region) {
       });
 
     return () => { cancelled = true; };
-  }, [region]);
+  }, []); // no region dependency — grid never changes
 
   return { isobars, loading, error };
 }

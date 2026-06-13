@@ -15,22 +15,14 @@ export interface IsobarLine {
 }
 
 // Covers SE Australia + surrounds — wide enough to capture synoptic pressure systems
-export const SYDNEY_GRID: GridConfig = {
-  latMin: -44,
-  latMax: -22,
-  lonMin: 140,
-  lonMax: 165,
+// One large grid shared by all views — edges stay off-screen at any normal zoom
+export const AUSTRALASIA_GRID: GridConfig = {
+  latMin: -65,
+  latMax: -5,
+  lonMin: 80,
+  lonMax: 195,
   nRows: 15,
-  nCols: 15,
-};
-
-export const AUSTRALIA_GRID: GridConfig = {
-  latMin: -44,
-  latMax: -10,
-  lonMin: 112,
-  lonMax: 154,
-  nRows: 15,
-  nCols: 15,
+  nCols: 20,
 };
 
 // Flat array of [lat, lon] pairs in row-major order (row 0 = north edge)
