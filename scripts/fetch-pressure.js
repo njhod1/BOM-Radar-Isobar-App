@@ -3,7 +3,7 @@
 // Run by the update-pressure GitHub Action every 30 minutes.
 // GitHub Actions IPs are not subject to the same rate limits as browser clients.
 
-const { writeFileSync } = require('fs');
+import { writeFileSync } from 'fs';
 
 const GRID = { latMin: -75, latMax: 75, lonMin: -179, lonMax: 179, nRows: 10, nCols: 12 };
 
