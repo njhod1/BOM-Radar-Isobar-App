@@ -14,14 +14,15 @@ export interface IsobarLine {
   rings: Array<[number, number][]>; // each ring: [[lat, lon], ...]
 }
 
-// Coarse global grid — 15×20 = 300 points, fits in a single API request
+// Coarse global grid — 10×12 = 120 points; small enough to stay inside
+// Open-Meteo's free-tier per-request coordinate limit
 export const GLOBAL_GRID: GridConfig = {
   latMin: -75,
   latMax: 75,
   lonMin: -179,
   lonMax: 179,
-  nRows: 15,
-  nCols: 20,
+  nRows: 10,
+  nCols: 12,
 };
 
 // Dense local grid derived from the current map viewport + 70% padding so

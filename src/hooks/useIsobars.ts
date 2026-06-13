@@ -11,9 +11,7 @@ interface OMPoint {
   hourly: { pressure_msl: number[] };
 }
 
-// current UTC hour → index into the hourly array (which starts at 00:00 UTC)
 const nowHour = () => new Date().getUTCHours();
-
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 async function fetchPressure(cfg: GridConfig, attempt = 0): Promise<number[]> {
@@ -47,26 +45,55 @@ async function fetchPressure(cfg: GridConfig, attempt = 0): Promise<number[]> {
 }
 
 const GLOBAL_TTL = 30 * 60 * 1000;
-const sharedCache = { data: null as IsobarLine[] | null, at: 0 };
+const LS_KEY = 'bom-isobars-v1';
+
+// In-memory cache (survives re-renders, lost on tab close)
+const mem = { data: null as IsobarLine[] | null, at: 0 };
+
+function lsLoad(): { data: IsobarLine[]; at: number } | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    return p?.at && Array.isArray(p?.data) ? p : null;
+  } catch { return null; }
+}
+
+function lsSave(data: IsobarLine[]) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ data, at: Date.now() })); }
+  catch { /* storage full or unavailable */ }
+}
 
 export function useIsobars() {
-  const [isobars, setIsobars]   = useState<IsobarLine[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [error,   setError]     = useState<string | null>(null);
+  const [isobars, setIsobars] = useState<IsobarLine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState<string | null>(null);
 
   useEffect(() => {
-    if (sharedCache.data && Date.now() - sharedCache.at < GLOBAL_TTL) {
-      setIsobars(sharedCache.data);
+    // 1. In-memory hit (same tab, survives re-renders)
+    if (mem.data && Date.now() - mem.at < GLOBAL_TTL) {
+      setIsobars(mem.data);
       setLoading(false);
       return;
     }
+    // 2. localStorage hit (new tab / page reload, same browser)
+    const stored = lsLoad();
+    if (stored && Date.now() - stored.at < GLOBAL_TTL) {
+      mem.data = stored.data;
+      mem.at   = stored.at;
+      setIsobars(stored.data);
+      setLoading(false);
+      return;
+    }
+    // 3. Fetch fresh
     setLoading(true);
     setError(null);
     fetchPressure(GLOBAL_GRID)
       .then(vals => {
         const lines = computeIsobars(vals, GLOBAL_GRID);
-        sharedCache.data = lines;
-        sharedCache.at = Date.now();
+        mem.data = lines;
+        mem.at   = Date.now();
+        lsSave(lines);
         setIsobars(lines);
         setLoading(false);
       })
