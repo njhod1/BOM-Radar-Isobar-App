@@ -20,6 +20,19 @@ function gridPoints(cfg) {
   return pts;
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchOnce(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Open-Meteo ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const raw = await res.json();
+  if (raw.error) throw new Error(raw.reason ?? 'API error');
+  return raw;
+}
+
 async function main() {
   const pts = gridPoints(GRID);
   const lats = pts.map(([lat]) => lat.toFixed(2)).join(',');
@@ -29,13 +42,19 @@ async function main() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
               `&hourly=pressure_msl&timezone=UTC&forecast_days=1`;
 
-  const res = await fetch(url);
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Open-Meteo ${res.status}: ${body.slice(0, 200)}`);
+  // Retry transient network/rate-limit failures before giving up
+  let raw, lastErr;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      if (attempt > 0) await sleep(5000 * attempt);
+      raw = await fetchOnce(url);
+      break;
+    } catch (e) {
+      lastErr = e;
+      console.error(`Attempt ${attempt + 1} failed: ${e.message}`);
+    }
   }
-  const raw = await res.json();
-  if (raw.error) throw new Error(raw.reason ?? 'API error');
+  if (!raw) throw lastErr ?? new Error('fetch failed');
 
   const arr = Array.isArray(raw) ? raw : [raw];
   const values = arr.map(p => p.hourly?.pressure_msl?.[h] ?? 1013.25);
@@ -47,4 +66,9 @@ async function main() {
   console.log(`Wrote ${values.length} points, range ${range.toFixed(1)} hPa, hour ${h} UTC`);
 }
 
-main().catch(e => { console.error('FAILED:', e.message); process.exit(1); });
+// On unrecoverable failure exit 0 so the scheduled job doesn't email a failure —
+// the previous committed data stays in place and the app tolerates it (90-min window).
+main().catch(e => {
+  console.error('Could not update pressure data, keeping previous data:', e.message);
+  process.exit(0);
+});

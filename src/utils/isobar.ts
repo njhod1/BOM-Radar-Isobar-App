@@ -58,13 +58,6 @@ export function gridPoints(cfg: GridConfig): Array<[number, number]> {
   return pts;
 }
 
-// Convert contour [x=col, y=row] space back to [lat, lon]
-function xyToLatLon(x: number, y: number, cfg: GridConfig): [number, number] {
-  const lat = cfg.latMax - (y / (cfg.nRows - 1)) * (cfg.latMax - cfg.latMin);
-  const lon = cfg.lonMin + (x / (cfg.nCols - 1)) * (cfg.lonMax - cfg.lonMin);
-  return [lat, lon];
-}
-
 // 3×3 box blur — reduces sharp single-cell spikes that cause concentric-ring artifacts
 function smooth(vals: number[], nRows: number, nCols: number): number[] {
   return vals.map((_, i) => {
@@ -82,18 +75,54 @@ function smooth(vals: number[], nRows: number, nCols: number): number[] {
   });
 }
 
+// Bilinearly upsample a coarse grid by factor k so d3-contour has many cells to
+// work with — this is what turns straight, faceted isobars into smooth curves.
+function upsample(
+  vals: number[], nRows: number, nCols: number, k: number,
+): { data: number[]; rows: number; cols: number } {
+  const rows = (nRows - 1) * k + 1;
+  const cols = (nCols - 1) * k + 1;
+  const data = new Array<number>(rows * cols);
+  for (let r = 0; r < rows; r++) {
+    const fr = r / k;
+    const r0 = Math.min(nRows - 1, Math.floor(fr));
+    const r1 = Math.min(nRows - 1, r0 + 1);
+    const tr = fr - r0;
+    for (let c = 0; c < cols; c++) {
+      const fc = c / k;
+      const c0 = Math.min(nCols - 1, Math.floor(fc));
+      const c1 = Math.min(nCols - 1, c0 + 1);
+      const tc = fc - c0;
+      const v00 = vals[r0 * nCols + c0];
+      const v01 = vals[r0 * nCols + c1];
+      const v10 = vals[r1 * nCols + c0];
+      const v11 = vals[r1 * nCols + c1];
+      const top = v00 + (v01 - v00) * tc;
+      const bot = v10 + (v11 - v10) * tc;
+      data[r * cols + c] = top + (bot - top) * tr;
+    }
+  }
+  return { data, rows, cols };
+}
+
 const THRESHOLDS = Array.from({ length: 16 }, (_, i) => 980 + i * 4); // 980..1040 hPa
+const UPSAMPLE = 6;
 
 export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] {
-  // One smoothing pass tames single-cell spikes without compressing the pressure range
+  // Smooth away single-cell spikes, then upsample for smooth curved contours
   const v = smooth(values, cfg.nRows, cfg.nCols);
-  const gen = contours().size([cfg.nCols, cfg.nRows]).thresholds(THRESHOLDS);
-  return gen(v)
+  const { data, rows, cols } = upsample(v, cfg.nRows, cfg.nCols, UPSAMPLE);
+  const gen = contours().size([cols, rows]).thresholds(THRESHOLDS);
+  return gen(data)
     .filter(f => f.coordinates.length > 0)
     .map(f => ({
       pressure: f.value,
       rings: f.coordinates.map(polygon =>
-        polygon[0].map(([x, y]) => xyToLatLon(x, y, cfg)),
+        polygon[0].map(([x, y]) => {
+          const lat = cfg.latMax - (y / (rows - 1)) * (cfg.latMax - cfg.latMin);
+          const lon = cfg.lonMin + (x / (cols - 1)) * (cfg.lonMax - cfg.lonMin);
+          return [lat, lon] as [number, number];
+        }),
       ),
     }));
 }
