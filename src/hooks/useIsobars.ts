@@ -17,8 +17,10 @@ interface PressureData {
 const GH_DATA_URL =
   'https://raw.githubusercontent.com/njhod1/BOM-Radar-Isobar-App/main/public/pressure-data.json';
 
-// Accept data up to 90 min old (Action runs every 30 min; allow 3× for lag/failures)
-const DATA_MAX_AGE = 90 * 60 * 1000;
+// Accept data up to 6 h old. The Action refreshes every 30 min, but pressure
+// systems move slowly — hours-old isobars are still useful, so tolerate stale
+// data rather than showing an error if a few Action runs fail to refresh.
+const DATA_MAX_AGE = 6 * 60 * 60 * 1000;
 const GLOBAL_TTL   = 30 * 60 * 1000;
 const LS_KEY       = 'bom-isobars-v2';
 
