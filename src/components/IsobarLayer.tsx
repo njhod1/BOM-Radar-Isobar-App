@@ -167,7 +167,12 @@ export function IsobarLayer({ globalIsobars, opacity }: Props) {
 
   if (opacity === 0) return null;
 
-  const isobars = view.zoom > ZOOM_THRESHOLD && localIsobars ? localIsobars : globalIsobars;
+  // Use the finer local grid only when it actually produced lines; otherwise
+  // (e.g. the local fetch was rate-limited) fall back to the smooth global set.
+  const isobars =
+    view.zoom > ZOOM_THRESHOLD && localIsobars && localIsobars.length > 0
+      ? localIsobars
+      : globalIsobars;
   if (isobars.length === 0) return null;
 
   return (

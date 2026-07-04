@@ -136,6 +136,25 @@ function clipFrame(ring: [number, number][], cfg: GridConfig): Array<[number, nu
   return out;
 }
 
+// Chaikin corner-cutting — rounds the angular joints left by a coarse grid into
+// smooth curves. Each pass replaces every corner with two points at 1/4 and 3/4
+// along its segments; endpoints are preserved so open polylines stay anchored.
+function chaikin(pts: [number, number][], iterations = 2): [number, number][] {
+  let out = pts;
+  for (let it = 0; it < iterations && out.length >= 3; it++) {
+    const next: [number, number][] = [out[0]];
+    for (let i = 0; i < out.length - 1; i++) {
+      const [ay, ax] = out[i];
+      const [by, bx] = out[i + 1];
+      next.push([ay + (by - ay) * 0.25, ax + (bx - ax) * 0.25]);
+      next.push([ay + (by - ay) * 0.75, ax + (bx - ax) * 0.75]);
+    }
+    next.push(out[out.length - 1]);
+    out = next;
+  }
+  return out;
+}
+
 export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] {
   // Smooth away single-cell spikes, then upsample for smooth curved contours
   const v = smooth(values, cfg.nRows, cfg.nCols);
@@ -151,7 +170,7 @@ export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] 
           const lon = cfg.lonMin + (x / (cols - 1)) * (cfg.lonMax - cfg.lonMin);
           return [lat, lon] as [number, number];
         });
-        for (const seg of clipFrame(latlon, cfg)) rings.push(seg);
+        for (const seg of clipFrame(latlon, cfg)) rings.push(chaikin(seg));
       }
       return { pressure: f.value, rings };
     });
