@@ -25,12 +25,16 @@ export function RadarMap({ flyTarget, frames, currentFrame, radarOpacity, isobar
       zoomControl={false}
       className="map-container"
       attributionControl={true}
+      maxBounds={[[-85, -180], [85, 180]]}
+      maxBoundsViscosity={1.0}
+      worldCopyJump={false}
     >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
         subdomains="abcd"
         maxZoom={19}
+        noWrap={true}
       />
       <MapController flyTarget={flyTarget} />
       <AnimatedRadar frames={frames} currentIndex={currentFrame} opacity={radarOpacity} />

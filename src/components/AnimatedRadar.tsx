@@ -29,6 +29,7 @@ export function AnimatedRadar({ frames, currentIndex, opacity }: Props) {
           attribution: 'Radar: <a href="https://www.rainviewer.com">RainViewer</a>',
           maxNativeZoom: 8,
           maxZoom: 19,
+          noWrap: true,           // don't repeat radar across wrapped world copies
           keepBuffer: 4,          // keep more surrounding tiles so panning doesn't blank out
         });
         // Mark a frame ready once all its visible tiles have loaded

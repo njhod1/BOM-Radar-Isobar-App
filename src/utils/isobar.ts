@@ -108,6 +108,34 @@ function upsample(
 const THRESHOLDS = Array.from({ length: 16 }, (_, i) => 980 + i * 4); // 980..1040 hPa
 const UPSAMPLE = 6;
 
+// A point sitting on the outer edge of the data grid (contours get closed along
+// the grid frame, which would otherwise draw a rectangular "box" over the map).
+function onFrame(pt: [number, number], cfg: GridConfig, eps = 0.05): boolean {
+  return (
+    Math.abs(pt[0] - cfg.latMax) < eps ||
+    Math.abs(pt[0] - cfg.latMin) < eps ||
+    Math.abs(pt[1] - cfg.lonMin) < eps ||
+    Math.abs(pt[1] - cfg.lonMax) < eps
+  );
+}
+
+// Split a closed contour ring into open polylines, dropping any segment that
+// runs along the grid frame — this removes the boundary box while keeping the
+// real isobars that touch the edge.
+function clipFrame(ring: [number, number][], cfg: GridConfig): Array<[number, number][]> {
+  const out: Array<[number, number][]> = [];
+  let cur: [number, number][] = [];
+  for (let i = 0; i < ring.length; i++) {
+    if (i > 0 && onFrame(ring[i - 1], cfg) && onFrame(ring[i], cfg)) {
+      if (cur.length > 1) out.push(cur);
+      cur = [];
+    }
+    cur.push(ring[i]);
+  }
+  if (cur.length > 1) out.push(cur);
+  return out;
+}
+
 export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] {
   // Smooth away single-cell spikes, then upsample for smooth curved contours
   const v = smooth(values, cfg.nRows, cfg.nCols);
@@ -115,16 +143,18 @@ export function computeIsobars(values: number[], cfg: GridConfig): IsobarLine[] 
   const gen = contours().size([cols, rows]).thresholds(THRESHOLDS);
   return gen(data)
     .filter(f => f.coordinates.length > 0)
-    .map(f => ({
-      pressure: f.value,
-      rings: f.coordinates.map(polygon =>
-        polygon[0].map(([x, y]) => {
+    .map(f => {
+      const rings: Array<[number, number][]> = [];
+      for (const polygon of f.coordinates) {
+        const latlon = polygon[0].map(([x, y]) => {
           const lat = cfg.latMax - (y / (rows - 1)) * (cfg.latMax - cfg.latMin);
           const lon = cfg.lonMin + (x / (cols - 1)) * (cfg.lonMax - cfg.lonMin);
           return [lat, lon] as [number, number];
-        }),
-      ),
-    }));
+        });
+        for (const seg of clipFrame(latlon, cfg)) rings.push(seg);
+      }
+      return { pressure: f.value, rings };
+    });
 }
 
 export function isobarColor(hPa: number): string {
